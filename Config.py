@@ -20,3 +20,4 @@ class Config:
             self.db_database = config.get("postgresql", "database")
         except Exception as e:
             print "[ERROR on read cfg] "+ str(e)
+            exit()
