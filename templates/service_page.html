@@ -13,7 +13,7 @@
     <div id="desc">
         이 서비스를 통해 여러 기관에서 제공하는 대한민국 행정구역 정보를 다운받을 수 있습니다.<br/>
         <br/>
-        각 자료마다 기준시기와 출처 등을 명확히 제공해 해당 시기의 통계자료등과 연결 가능합니다.<br/>
+        각 자료마다 기준시기와 출처 등을 명확히 제공해 해당 시기의 통계자료 등과 연결 가능합니다.<br/>
         또한, 사용자가 원하는 좌표계로 행정구역 공간정보를 다운받을 수 있습니다.<br/>
         <br/>
         현재 제공되는 행정구역 공간정보는 {{ class1_list|length }} 종, 총 {{ all_meta|length }} 가지이며 다음과 같습니다.
@@ -26,17 +26,23 @@
     <div id="ui">
         자료종류 선택:
         <select id="class1">
-            {% for class1 in class1_list %}
-            <option value="{{ class1[0] }}">{{ class1[0] }}</option>
+            {% for row in class1_list %}
+            <option value="{{ row[0] }}">{{ row[0] }}</option>
             {% endfor %}
         </select>
         <br/>
         세부자료 선택:
         <select id="class2">
+            {% for row in class2_list %}
+            <option value="{{ row[1] }}">{{ row[1] }}</option>
+            {% endfor %}
         </select>
         <br/>
         자료시기 선택:
-        <select id="class3">
+        <select id="timing">
+            {% for row in timing_list %}
+            <option value="{{ row[2] }}">{{ row[2] }}</option>
+            {% endfor %}
         </select>
         <br/>
         좌표계 선택:
