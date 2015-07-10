@@ -86,13 +86,13 @@ def get_class1():
     return query_db("select distinct class1 from adminzone_meta order by class1")
 
 def get_class2(class1):
-    return query_db("select distinct class1, class2 from adminzone_meta where class1 = '{}' order by class1, class2".format(class1.encode("utf-8")))
+    return query_db("select distinct class2 from adminzone_meta where class1 = '{}' order by class2".format(class1.encode("utf-8")))
 
 def get_class3(class1, class2):
     return query_db("select distinct class1, class2, class3 from adminzone_meta where class1 = ? and class2 = ? order by class1, class2, class3", class1.encode("utf-8"), class2.encode("utf-8"))
 
 def get_timing(class1, class2):
-    return query_db("select distinct class1, class2, timing from adminzone_meta where class1 = '{}' and class2 = '{}' order by class1, class2, timing".format(class1.encode("utf-8"), class2.encode("utf-8")))
+    return query_db("select distinct timing, table_name from adminzone_meta where class1 = '{}' and class2 = '{}' order by timing desc".format(class1.encode("utf-8"), class2.encode("utf-8")))
 
 def get_all_meta():
     # 결과를 col_name:value 딕셔너리로 만든다.
@@ -122,8 +122,10 @@ def api_get_class1():
 @app.route('/service_page')
 def service_page():
     class1_list = get_class1()
-    class2_list = get_class2(unicode(class1_list[0][0]))
-    timing_list = get_timing(class2_list[0][0], class2_list[0][1])
+    class1 = class1_list[0][0]
+    class2_list = get_class2(class1)
+    class2 = class2_list[0][0]
+    timing_list = get_timing(class1, class2)
     all_meta = get_all_meta()
 
     return render_template("service_page.html",
