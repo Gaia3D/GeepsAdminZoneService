@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, g, json
+from flask import Flask, g, json, render_template, Response
 import psycopg2
 import psycopg2.extras
 from Config import Config
@@ -53,6 +53,7 @@ def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = connect_to_database()
+        logger.info("### DB CONNECTED.")
     return db
 
 
@@ -61,18 +62,22 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+        logger.info("### DB DISCONNECTED.")
 
 
-def query_db(query, args=(), one=False, as_dict=False):
-    # 결과를 col_name:value 딕셔너리로 만든다.
-    # http://initd.org/psycopg/docs/extras.html
-    if as_dict:
-        cur = get_db().cursor(cursor_factory=psycopg2.extras.DictCursor)
-    else:
-        cur = get_db().cursor()
-    cur.execute(query, args)
-    rv = cur.fetchall()
-    cur.close()
+def query_db(query, args=(), one=False, cursor_factory=None):
+    try:
+        if cursor_factory:
+            cur = get_db().cursor(cursor_factory=cursor_factory)
+        else:
+            cur = get_db().cursor()
+        cur.execute(query, args)
+        rv = cur.fetchall()
+    except Exception as e:
+        logger.error("[DB ERROR] {}\n L___ {}", str(e), query)
+        rv = (None,)
+    finally:
+        cur.close()
     return (rv[0] if rv else None) if one else rv
 
 
@@ -82,21 +87,39 @@ def hello():
     return "GeepsAdminZoneService Activated!"
 
 
-@app.route('/api/get_class1')
 def get_class1():
-    out_str = None
-    try:
-        for row in query_db("select distinct class1 from adminzone_meta order by class1", as_dict=True):
-            if not out_str:
-                out_str = row['class1']
-            else:
-                out_str += "<br/>" + row['class1']
+    return query_db("select distinct class1 from adminzone_meta order by class1")
 
-    except Exception as e:
-        print e
+def get_class2(class1):
+    return query_db("select distinct class1, class2 from adminzone_meta order by class1, class2 where class1 = ?", class1)
 
-    return out_str
+def get_class3(class1, class2):
+    return query_db("select distinct class1, class2, class3 from adminzone_meta order by class1, class2, class3 where class1 = ? and class2 = ?", class1, class2)
 
+def get_all_meta():
+    # 결과를 col_name:value 딕셔너리로 만든다.
+    # http://initd.org/psycopg/docs/extras.html
+    return query_db("select * from adminzone_meta order by class1, class2, class3", cursor_factory=psycopg2.extras.NamedTupleCursor)
+
+
+@app.route('/api/get_class1')
+def api_get_class1():
+    out_list = list()
+    for row in get_class1():
+        out_list.append(row[0])
+
+    ret = Response(json.dumps(out_list, ensure_ascii=False), mimetype='text/json')
+    ret.content_encoding = 'utf-8'
+    ret.cache_control = "999999"
+    return ret
+
+
+@app.route('/service_page')
+def service_page():
+    class1_list = get_class1()
+    all_meta = get_all_meta()
+
+    return render_template("service_page.html", class1_list=class1_list, all_meta=all_meta)
 
 if __name__ == '__main__':
     app.run()
