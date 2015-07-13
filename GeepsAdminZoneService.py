@@ -97,7 +97,7 @@ def get_timing(class1, class2):
 def get_all_meta():
     # 결과를 col_name:value 딕셔너리로 만든다.
     # http://initd.org/psycopg/docs/extras.html
-    return query_db("select * from adminzone_meta order by class1, class2, class3", cursor_factory=psycopg2.extras.NamedTupleCursor)
+    return query_db("select * from adminzone_meta order by class1, class2, class3, timing desc", cursor_factory=psycopg2.extras.NamedTupleCursor)
 
 def get_all_meta_json():
     res = get_all_meta()

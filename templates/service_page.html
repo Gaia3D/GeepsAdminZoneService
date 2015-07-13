@@ -21,33 +21,36 @@
         또한, 사용자가 원하는 좌표계로 행정구역 공간정보를 다운받을 수 있습니다.<br/>
         <br/>
         현재 제공되는 행정구역 공간정보는 {{ count_info[0] }} 종, 총 {{ count_info[1] }} 가지이며 다음과 같습니다.
-        <br/>
     </div>
-    <div id="ui">
-        자료종류 선택:
-        <div id="class1">
-            <input type="radio" name="class1" value="class1_name">NAME
-        </div>
-        세부자료 선택:
-        <div id="class2">
-            <input type="radio" name="class2" value="class2_name">NAME
-        </div>
-        자료시기 선택:
-        <div id="timing">
-            <input type="radio" name="timing" value="class3_name">NAME
-        </div>
-        <br/>
-        좌표계 선택:
-        <select id="crs">
-            <option value="epsg_4326">EPSG:4326</option>
-        </select>
-        &nbsp;
-        <button id="run" class="btn"> 다운로드 </button>
-    </div>
+    <br/>
     <div id="dialog" title="GeoCoding" style="display: None;">
         <div id="progressbar"></div>
         다운로드 준비중...(<span id="percent">0</span>%)
     </div>
-<iframe id="txtArea1" style="display:none"></iframe>
+    <div id="ui">
+        <div id="class1">
+            <input type="radio" name="class1" value="class1_name">NAME
+        </div>
+        <div id="class2">
+
+            <input type="radio" name="class2" value="class2_name">NAME
+        </div>
+        <div id="timing">
+
+            <input type="radio" name="timing" value="class3_name">NAME
+        </div>
+        <br/>
+        <div id="epsg">
+            좌표계 선택:
+            <select id="crs">
+                <option value="epsg_4326">EPSG:4326</option>
+            </select>
+            &nbsp;
+            <button id="run" class="btn"> 다운로드 </button>
+        </div>
+    </div>
+    <div id="info">
+        <!-- TODO: 설명 UI 추가 -->
+    </div>
 </body>
 </html>
