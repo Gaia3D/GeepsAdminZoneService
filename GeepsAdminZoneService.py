@@ -99,6 +99,44 @@ def get_all_meta():
     # http://initd.org/psycopg/docs/extras.html
     return query_db("select * from adminzone_meta order by class1, class2, class3", cursor_factory=psycopg2.extras.NamedTupleCursor)
 
+def get_all_meta_json():
+    res = get_all_meta()
+
+    dict_res = dict()
+    for row in res:
+        class1 = row.class1
+        level = 1
+        class2 = row.class2
+        if class2: level = 2
+        class3 = row.class3
+        if class3: level = 3
+        data = {'table_name':row.table_name, 'timing':row.timing, 'agency':row.agency,
+                'source_url':row.source_url, 'image_url':row.image_url, 'source_name':row.source_name,
+                'description':row.description}
+
+        if level == 1:
+            if not dict_res.has_key(class1):
+                dict_res[class1] = list()
+            dict_res[class1].append(data)
+        elif level == 2:
+            if not dict_res.has_key(class1):
+                dict_res[class1] = dict()
+            if not dict_res[class1].has_key(class2):
+                dict_res[class1][class2] = list()
+            dict_res[class1][class2].append(data)
+        else: # level == 3
+            if not dict_res.has_key(class1):
+                dict_res[class1] = dict()
+            if not dict_res[class1].has_key(class2):
+                dict_res[class1][class2] = dict()
+            if not dict_res[class1][class2].has_key(class3):
+                dict_res[class1][class2][class3] = list()
+            dict_res[class1][class2][class3].append(data)
+
+    return json.dumps(dict_res, ensure_ascii=False)
+
+def get_count_info():
+    return query_db("select (select count(*) as n_class1 from (select distinct class1 from adminzone_meta) as t_class1), (select count(*) as n_total from adminzone_meta)")
 
 ### EVENT
 @app.route('/test')
@@ -119,20 +157,24 @@ def api_get_class1():
     return ret
 
 
+@app.route('/api/get_all_meta')
+def api_get_all_meta():
+    json_res = get_all_meta_json()
+    ret = Response(json_res, mimetype='text/json')
+    ret.content_encoding = 'utf-8'
+    ret.headers.set("Cache-Control", "public, max-age=604800")
+
+    return ret
+
+
 @app.route('/service_page')
 def service_page():
-    class1_list = get_class1()
-    class1 = class1_list[0][0]
-    class2_list = get_class2(class1)
-    class2 = class2_list[0][0]
-    timing_list = get_timing(class1, class2)
-    all_meta = get_all_meta()
+    count_info = get_count_info()
+    all_meta_json = get_all_meta_json()
 
     return render_template("service_page.html",
-                           class1_list=class1_list,
-                           class2_list=class2_list,
-                           timing_list=timing_list,
-                           all_meta=all_meta)
+                           count_info=count_info[0],
+                           metadata=all_meta_json)
 
 if __name__ == '__main__':
     app.run()

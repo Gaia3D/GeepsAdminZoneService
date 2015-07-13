@@ -6,7 +6,11 @@
     <script src="{{ url_for('static', filename='jquery-1.11.3.min.js') }}"></script>
     <script src="{{ url_for('static', filename='service_page.js') }}" charset="UTF-8"></script>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='service_page.css') }}">
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script>
+        metadata = JSON.parse({{ metadata | tojson }});
+    </script>
 </head>
 <body>
     <h1>행정구역 공간정보 제공 서비스</h1>
@@ -16,34 +20,22 @@
         각 자료마다 기준시기와 출처 등을 명확히 제공해 해당 시기의 통계자료 등과 연결 가능합니다.<br/>
         또한, 사용자가 원하는 좌표계로 행정구역 공간정보를 다운받을 수 있습니다.<br/>
         <br/>
-        현재 제공되는 행정구역 공간정보는 {{ class1_list|length }} 종, 총 {{ all_meta|length }} 가지이며 다음과 같습니다.
-        <ul>
-            {% for class1 in class1_list %}
-            <li>{{ class1[0] }}</li>
-            {% endfor %}
-        </ul>
+        현재 제공되는 행정구역 공간정보는 {{ count_info[0] }} 종, 총 {{ count_info[1] }} 가지이며 다음과 같습니다.
+        <br/>
     </div>
     <div id="ui">
         자료종류 선택:
-        <select id="class1">
-            {% for row in class1_list %}
-            <option value="{{ row[0] }}">{{ row[0] }}</option>
-            {% endfor %}
-        </select>
-        <br/>
+        <div id="class1">
+            <input type="radio" name="class1" value="class1_name">NAME
+        </div>
         세부자료 선택:
-        <select id="class2">
-            {% for row in class2_list %}
-            <option value="{{ row[0] }}">{{ row[0] }}</option>
-            {% endfor %}
-        </select>
-        <br/>
+        <div id="class2">
+            <input type="radio" name="class2" value="class2_name">NAME
+        </div>
         자료시기 선택:
-        <select id="timing">
-            {% for row in timing_list %}
-            <option value="{{ row[1] }}">{{ row[0] }}</option>
-            {% endfor %}
-        </select>
+        <div id="timing">
+            <input type="radio" name="timing" value="class3_name">NAME
+        </div>
         <br/>
         좌표계 선택:
         <select id="crs">
