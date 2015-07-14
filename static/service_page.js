@@ -61,6 +61,7 @@ function onSelectedClass1() {
         onSelectedClass2()
     } else {
         $("#class2").hide();
+        onSelectedClass2();
     }
 }
 
@@ -68,9 +69,10 @@ function onSelectedClass2() {
     var class1 = $(':radio[name="class1"]:checked').val();
     var class2_dic = metadata[class1];
 
+    var timing_dic;
     if (!class2_dic.length) {
         var class2 = $(':radio[name="class2"]:checked').val();
-        var timing_dic = class2_dic[class2];
+        timing_dic = class2_dic[class2];
     } else {
         timing_dic = class2_dic;
     }
@@ -80,12 +82,53 @@ function onSelectedClass2() {
             var checked = true;
         else
             var checked = false;
-        timing = timing_dic[i].timing;
-        table_name = timing_dic[i].table_name;
+        var timing = timing_dic[i].timing;
+        var table_name = timing_dic[i].table_name;
         timing_html += '<label><input type="radio" name="timing" value="'+table_name+'"'+(checked?' checked':'')
             +'>'+timing+'</label>&nbsp;';
     }
     $("#timing").html(timing_html);
+    $('#timing input:radio').on("change", onSelectedTiming);
+    onSelectedTiming()
+}
+
+function onSelectedTiming() {
+    var class1 = $(':radio[name="class1"]:checked').val();
+    var class2_dic = metadata[class1];
+    var class2;
+
+    var timing_dic;
+    if (!class2_dic.length) {
+        class2 = $(':radio[name="class2"]:checked').val();
+        timing_dic = class2_dic[class2];
+    } else {
+        timing_dic = class2_dic;
+    }
+
+    var table_name = $(':radio[name="timing"]:checked').val();
+    var timing, agency, source_name, source_url, image_url, description;
+    for (var i=0; i<timing_dic.length; i++) {
+        var row = timing_dic[i]
+        if (row.table_name == table_name) {
+            timing = row.timing;
+            agency = row.agency;
+            source_name = row.source_name;
+            source_url = row.source_url;
+            image_url = row.image_url;
+            description = row.description;
+            break;
+        }
+    }
+
+    if (timing) {
+        var title = class1 + (class2 ? ("("+class2+")") : "") + " - " + timing;
+        $("#info_title").text(title);
+        $("#info_agency").text(agency);
+        $("#info_source_name").text(source_name);
+        $("#info_source_url").text(source_url);
+        $("#info_description").text(description);
+        $("#info_image").attr("src", image_url);
+    }
 }
 
 function onClickButton() {
@@ -104,129 +147,3 @@ function onClickButton() {
     }
 }
 
-// 입력 상자 클릭시 전체가 선택되게
-function onClickTextarea() {
-    $("#address_input textarea").select();
-}
-
-
-function stopConvert() {
-    gStopFlag = true;
-}
-
-var markerGroup;
-function convertAddr() {
-    var data = $("#address_input textarea").val().trim().split("\n");
-    var crs = $("#crs").val();
-
-    // 변환결과 초기화
-    $("#result_table tbody").html("");
-    if (markerGroup) map.removeLayer(markerGroup);
-    markerGroup = L.layerGroup().addTo(map);
-
-    // Modal dialog
-    dialog = $("#dialog").dialog({
-        autoOpen: false,
-        //height: 150,
-        //width: 350,
-        modal: true,
-        buttons: null
-    });
-
-    progress.progressbar("option", "value", 0);
-    dialog.dialog( "open" );
-    gStopFlag = false;
-
-    gNumTotal = data.length;
-    gNumProcessed = 0;
-    progress.progressbar("option", "max", gNumTotal);
-
-    for (var i in data) {
-        var q = data[i];
-        var url = "/geocoding/api?crs="+encodeURIComponent(crs)+"&q="+encodeURIComponent(q);
-
-        if (gStopFlag) {
-            gStopFlag = false;
-            dialog.dialog( "close" );
-            return;
-        }
-
-        $.getJSON(url, function(data) {
-            ++gNumProcessed;
-            progress.progressbar("option", "value", gNumProcessed);
-            $("#percent").html((gNumProcessed*100/gNumTotal).toFixed(0));
-            if (gNumProcessed >= gNumTotal) {
-                gStopFlag = false;
-                dialog.dialog( "close" );
-            }
-
-            if (!data.geojson) {
-                $("#result_table tbody").append("<tr><td>" + data.q + "</td><td colspan=8>변환 실패</td></tr>");
-
-                return;
-            }
-
-            var x = data.x;
-            var y = data.y;
-            var lng = data.lng;
-            var lat = data.lat;
-            var address = data.address;
-            var html = '<tr><td>'+data.q+'</td><td>'+address+'</td><td>'+ x.toFixed(2)+'</td><td>'+y.toFixed(2)+'</td>'
-                +'<td>'+lng.toFixed(5)+'</td><td>'+lat.toFixed(5)+'</td><td>'+data.geojson.properties.service+'</td>'
-                +'<td>'+data.sd+'</td><td>'+data.sim_ratio+'</td></tr>';
-            $("#result_table tbody").append(html);
-
-            var marker = L.marker([lat, lng]);
-            marker.bindPopup(address);
-            marker.addTo(markerGroup);
-        })
-        .fail(function () {
-            ++gNumProcessed;
-            progress.progressbar("option", "value", gNumProcessed);
-            $("#percent").html((gNumProcessed*100/gNumTotal).toFixed(0));
-            if (gNumProcessed >= gNumTotal) {
-                gStopFlag = false;
-                dialog.dialog( "close" );
-            }
-        });
-    }
-}
-
-
-// 엑셀 파일로 저장
-// http://stackoverflow.com/questions/22317951/export-html-table-data-to-excel-using-javascript-jquery-is-not-working-properl
-function fnExcelReport()
-{
-    var tab_text='<!DOCTYPE html><html><head lang="ko"><meta charset="UTF-8"></head><body>'
-        +"<table border='2px'><tr bgcolor='#87AFC6'>";
-    var textRange; var j=0;
-    tab = document.getElementById('result_table'); // id of table
-
-    for(j = 0 ; j < tab.rows.length ; j++)
-    {
-        tab_text=tab_text+tab.rows[j].innerHTML+"</tr>";
-        //tab_text=tab_text+"</tr>";
-    }
-
-    tab_text=tab_text+"</table>";
-    tab_text= tab_text.replace(/<A[^>]*>|<\/A>/g, "");//remove if u want links in your table
-    tab_text= tab_text.replace(/<img[^>]*>/gi,""); // remove if u want images in your table
-    tab_text= tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
-    tab_text += "</body></html>";
-
-    var ua = window.navigator.userAgent;
-    var msie = ua.indexOf("MSIE ");
-
-    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
-    {
-        txtArea1.document.open("txt/html","replace");
-        txtArea1.document.write(tab_text);
-        txtArea1.document.close();
-        txtArea1.focus();
-        sa=txtArea1.document.execCommand("SaveAs",true,"GeoCoding.xls");
-    }
-    else                 //other browser not tested on IE 11
-        sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
-
-    return (sa);
-}
