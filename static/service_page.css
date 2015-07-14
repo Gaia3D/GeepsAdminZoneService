@@ -91,3 +91,27 @@ border: 1px solid #e0e1e2;
 #ui {
 margin-bottom:10px;
 }
+
+table {
+         margin:10px 0;
+         border-collapse:collapse;
+         border-top:2px solid #515b65;
+}
+table th {
+         background:#f1f8ff;
+}
+table th,td {
+         padding:5px;
+         border:1px solid #c5d1df;
+}
+label {
+         margin-right:20px;
+}
+#ui div {
+         margin-bottom:20px;
+}
+.title {
+         padding:3px;
+         color:#0062c3;
+         font-weight:bold;
+}

@@ -12,10 +12,12 @@ function onLoad() {
     var class1, class2, timing;
     var table_name;
 
-    var class1_html = "자료종류 선택:<br/>";
+    var class1_html = '';
     for (var i in metadata) {
-        if (class1_html == "자료종류 선택:<br/>")
+        if (class1_html == '') {
             var checked = true;
+            class1_html = '<p class="title">자료종류 선택</p>';
+        }
         else
             var checked = false;
         class1_html += '<label><input type="radio" name="class1" value="'+i+'"'+(checked?' checked':'')
@@ -46,10 +48,12 @@ function onSelectedClass1() {
     var class2_dic = metadata[class1];
 
     if (!class2_dic.length) {
-        var class2_html = "세부자료 선택:<br/>";
+        var class2_html = '';
         for (var i in class2_dic) {
-            if (class2_html == "세부자료 선택:<br/>")
+            if (class2_html == '') {
+                class2_html = '<p class="title">세부자료 선택</p>';
                 var checked = true;
+            }
             else
                 var checked = false;
             class2_html += '<label><input type="radio" name="class2" value="'+i+'"'+(checked?' checked':'')
@@ -76,10 +80,12 @@ function onSelectedClass2() {
     } else {
         timing_dic = class2_dic;
     }
-    var timing_html = "자료시기 선택:<br/>";
+    var timing_html = '';
     for (var i in timing_dic) {
-        if (timing_html == "자료시기 선택:<br/>")
+        if (timing_html == '') {
+            timing_html = '<p class="title">자료시기 선택</p>';
             var checked = true;
+        }
         else
             var checked = false;
         var timing = timing_dic[i].timing;

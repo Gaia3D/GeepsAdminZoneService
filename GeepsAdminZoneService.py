@@ -140,11 +140,13 @@ def get_count_info():
 
 ### EVENT
 @app.route('/test')
+@app.route('/adminzone/test')
 def hello():
     return "GeepsAdminZoneService Activated!"
 
 
 @app.route('/api/get_class1')
+@app.route('/adminzone/api/get_class1')
 def api_get_class1():
     out_list = list()
     for row in get_class1():
@@ -158,6 +160,7 @@ def api_get_class1():
 
 
 @app.route('/api/get_all_meta')
+@app.route('/adminzone/api/get_all_meta')
 def api_get_all_meta():
     json_res = get_all_meta_json()
     ret = Response(json_res, mimetype='text/json')
@@ -168,6 +171,7 @@ def api_get_all_meta():
 
 
 @app.route('/service_page')
+@app.route('/adminzone/service_page')
 def service_page():
     count_info = get_count_info()
     all_meta_json = get_all_meta_json()
