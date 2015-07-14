@@ -92,19 +92,19 @@ border: 1px solid #e0e1e2;
 margin-bottom:10px;
 }
 
-table {
+.info table {
          margin:10px 0;
          border-collapse:collapse;
          border-top:2px solid #515b65;
 }
-table th {
+.info table th {
          background:#f1f8ff;
 }
-table th,td {
+.info table th,td {
          padding:5px;
          border:1px solid #c5d1df;
 }
-label {
+.info label {
          margin-right:20px;
 }
 #ui div {

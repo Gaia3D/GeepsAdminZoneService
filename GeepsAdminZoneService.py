@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, g, json, render_template, Response
+from flask import Flask, g, json, render_template, Response, request
 import psycopg2
 import psycopg2.extras
 from Config import Config
 import logging
 import os.path
+from subprocess import call
+import tempfile
+from zipfile import *
 
 app = Flask(__name__)
 
@@ -178,7 +181,83 @@ def service_page():
 
     return render_template("service_page.html",
                            count_info=count_info[0],
-                           metadata=all_meta_json)
+                           metadata=all_meta_json,
+                           crs_list=config.crs_list)
+
+@app.route('/makefile')
+def makefile():
+    table_name = request.args.get('table_name', None)
+    crs = request.args.get('crs', None)
+
+    if not crs:
+        return "crs 인자가 필요합니다."
+    if not table_name:
+        return "table_name 인자가 필요합니다."
+
+    # crs 있는지 확인
+    if not ("EPSG:"+crs) in config.crs_list:
+        return "요청한 CRS가 없습니다."
+
+    # table_name 있는지 확인
+    res = query_db("select count(*) from adminzone_meta where table_name = %s", args=(table_name,), one=True)
+    if res[0] <= 0:
+        return "요청한 TABLE이 없습니다."
+
+    file_base = table_name+"__"+crs
+
+    zip_file = os.path.join(config.download_folder, file_base+".zip")
+    if os.path.isfile(zip_file):
+        return "기존 파일 있음"
+
+    temp_dir = tempfile.gettempdir()
+    shp_file = os.path.join(temp_dir, file_base+".shp")
+
+    # 조회용 Query 만들기
+    # http://splee75.tistory.com/93
+    res = query_db(
+        """
+select string_agg(txt, ', ')
+from (
+SELECT concat('SELECT ', string_agg(column_name, ', ')) as txt
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name   = '{table_name}'
+  AND udt_name != 'geometry'
+union
+SELECT concat('ST_Transform(', string_agg(column_name, ', '), ',{crs}) as geom FROM ""{table_name}""') as txt
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name   = '{table_name}'
+  AND udt_name = 'geometry'
+) tbl
+        """.format(crs=crs, table_name=table_name),
+    one=True)
+    sql = res[0]
+
+    try:
+        # Shape 파일 만들기
+        command = 'pgsql2shp -f {shp_file} -u {user} -P {pwd} {database} "{sql}"'.format(
+            shp_file=shp_file, user=config.db_user, pwd=config.db_pwd, database=config.db_database, sql=sql)
+        logger.debug(command)
+        rc = call(command)
+        if rc != 0:
+            return "Shape 파일 생성 중 오류"
+
+        with ZipFile(zip_file, 'w') as myzip:
+            myzip.write(os.path.join(temp_dir, file_base+".shp"), arcname=file_base+".shp")
+            myzip.write(os.path.join(temp_dir, file_base+".shx"), arcname=file_base+".shx")
+            myzip.write(os.path.join(temp_dir, file_base+".dbf"), arcname=file_base+".dbf")
+            myzip.write(os.path.join(temp_dir, file_base+".prj"), arcname=file_base+".prj")
+
+        os.remove(os.path.join(temp_dir, file_base+".shp"))
+        os.remove(os.path.join(temp_dir, file_base+".shx"))
+        os.remove(os.path.join(temp_dir, file_base+".dbf"))
+        os.remove(os.path.join(temp_dir, file_base+".prj"))
+    except Exception as e:
+        logger.error("Shape 생성 중 오류: "+str(e))
+        return "Shape 파일 생성 중 오류"
+
+    return "파일 생성 완료"
 
 if __name__ == '__main__':
     app.run()

@@ -9,17 +9,15 @@ var progress;
 
 function onLoad() {
     // 라디오 버튼 채우기
-    var class1, class2, timing;
-    var table_name;
-
     var class1_html = '';
+    var checked;
     for (var i in metadata) {
         if (class1_html == '') {
-            var checked = true;
+            checked = true;
             class1_html = '<p class="title">자료종류 선택</p>';
         }
         else
-            var checked = false;
+            checked = false;
         class1_html += '<label><input type="radio" name="class1" value="'+i+'"'+(checked?' checked':'')
             +'>'+i+'</label>&nbsp;';
     }
@@ -49,13 +47,14 @@ function onSelectedClass1() {
 
     if (!class2_dic.length) {
         var class2_html = '';
+        var checked;
         for (var i in class2_dic) {
             if (class2_html == '') {
                 class2_html = '<p class="title">세부자료 선택</p>';
-                var checked = true;
+                checked = true;
             }
             else
-                var checked = false;
+                checked = false;
             class2_html += '<label><input type="radio" name="class2" value="'+i+'"'+(checked?' checked':'')
                 +'>'+i+'</label>&nbsp;';
         }
@@ -81,13 +80,14 @@ function onSelectedClass2() {
         timing_dic = class2_dic;
     }
     var timing_html = '';
+    var checked;
     for (var i in timing_dic) {
         if (timing_html == '') {
             timing_html = '<p class="title">자료시기 선택</p>';
-            var checked = true;
+            checked = true;
         }
         else
-            var checked = false;
+            checked = false;
         var timing = timing_dic[i].timing;
         var table_name = timing_dic[i].table_name;
         timing_html += '<label><input type="radio" name="timing" value="'+table_name+'"'+(checked?' checked':'')
@@ -114,7 +114,7 @@ function onSelectedTiming() {
     var table_name = $(':radio[name="timing"]:checked').val();
     var timing, agency, source_name, source_url, image_url, description;
     for (var i=0; i<timing_dic.length; i++) {
-        var row = timing_dic[i]
+        var row = timing_dic[i];
         if (row.table_name == table_name) {
             timing = row.timing;
             agency = row.agency;
@@ -141,11 +141,8 @@ function onClickButton() {
     var id = $(this).attr("id");
 
     switch (id) {
-        case "run":
+        case "download":
             convertAddr();
-            break;
-        case "btnExport":
-            fnExcelReport();
             break;
         default :
             alert(id);
