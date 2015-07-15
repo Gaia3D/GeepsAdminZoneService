@@ -9,6 +9,7 @@ class Config:
     db_database = None
     crs_list = None
     download_folder = None
+    image_folder = None
 
     def __init__(self, config_file):
         try:
@@ -26,6 +27,8 @@ class Config:
 
             self.download_folder = config.get("download", "folder")
 
+            self.image_folder = config.get("image", "folder")
+
         except Exception as e:
-            print "[ERROR on read cfg] "+ str(e)
+            print "[ERROR on read cfg] " + str(e)
             exit()

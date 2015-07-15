@@ -25,20 +25,14 @@
         현재 제공되는 행정구역 공간정보는 {{ count_info[0] }} 종, 총 {{ count_info[1] }} 가지이며 다음과 같습니다.
     </div>
     <br/>
-    <div id="dialog" title="GeoCoding" style="display: None;">
-        <div id="progressbar"></div>
-        다운로드 준비중...(<span id="percent">0</span>%)
-    </div>
     <div id="ui">
         <div id="class1">
             <input type="radio" name="class1" value="class1_name">NAME
         </div>
         <div id="class2">
-
             <input type="radio" name="class2" value="class2_name">NAME
         </div>
         <div id="timing">
-
             <input type="radio" name="timing" value="class3_name">NAME
         </div>
         <br/>
@@ -50,8 +44,12 @@
                 {% endfor %}
             </select>
             &nbsp;
-            <button id="download" class="btn"> 다운로드 </button>
+            <button id="downloadButton" class="btn"> 다운로드 </button>
         </div>
+    </div>
+    <div id="dialog" title="AdminZone Service" style="display: None;">
+        <div id="progressbar"></div>
+        <div class="progress-label">Shape 파일 생성중...</div>
     </div>
     <div class="info">
         <table>
