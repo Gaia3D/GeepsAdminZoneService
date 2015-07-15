@@ -175,7 +175,7 @@ function onSelectedTiming() {
         $("#info_source_name").text(source_name);
         $("#info_source_url").text(source_url);
         $("#info_description").text(description);
-        $("#info_image").attr("src", image_url);
+        $("#info_image").attr("src", './api/get_image?table_name='+table_name);
     }
 }
 

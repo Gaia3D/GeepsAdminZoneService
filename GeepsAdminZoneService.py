@@ -8,6 +8,7 @@ import os.path
 from subprocess import call
 import tempfile
 from zipfile import *
+from urllib2 import urlopen, URLError, HTTPError
 
 app = Flask(__name__)
 
@@ -172,6 +173,47 @@ def api_get_all_meta():
 
     return ret
 
+@app.route('/api/get_image')
+@app.route('/adminzone/api/get_image')
+def api_get_image():
+    table_name = request.args.get('table_name', None)
+    if not table_name:
+        return Response("table_name 인자가 필요합니다.", 400)
+
+    # table_name 있는지 확인
+    res = query_db("select count(*) from adminzone_meta where table_name = %s", args=(table_name,), one=True)
+    if res[0] <= 0:
+        return Response("요청한 TABLE이 없습니다.", 500)
+
+    # image_url 조회
+    res = query_db("select image_url from adminzone_meta where table_name = %s", args=(table_name,), one=True)
+    image_url = res[0]
+
+    image_path = os.path.join(config.image_folder, table_name+'.png')
+
+    if not os.path.isfile(image_path):
+        try:
+            f = urlopen(image_url)
+
+            # Open our local file for writing
+            with open(image_path, "wb") as local_file:
+                local_file.write(f.read())
+
+        #handle errors
+        except HTTPError, e:
+            logger.error("HTTP Error:" + e.code + image_url)
+        except URLError, e:
+            logger.error("URL Error:" + e.reason + image_url)
+
+    try:
+        with open(image_path, "rb") as f:
+            image_bin = f.read()
+    except Exception as e:
+        logger.error("Image 다운로드 중 오류: "+str(e))
+        return Response("Image 다운로드 중 오류", 500)
+
+    ret = Response(image_bin, mimetype='image/png')
+    return ret
 
 @app.route('/service_page')
 @app.route('/adminzone/service_page')
