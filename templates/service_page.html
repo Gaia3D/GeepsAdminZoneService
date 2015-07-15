@@ -40,11 +40,13 @@
             좌표계 선택:
             <select id="crs">
                 {% for crs in crs_list %}
-                <option value="{{ crs }}">{{ crs }}</option>
+                <option value="EPSG:{{ crs.srid }}" about="{{ crs.desc }}">EPSG:{{ crs.srid }}</option>
                 {% endfor %}
             </select>
             &nbsp;
             <button id="downloadButton" class="btn"> 다운로드 </button>
+            <br/>
+            <span id="crs_desc"></span>
         </div>
     </div>
     <div id="dialog" title="AdminZone Service" style="display: None;">

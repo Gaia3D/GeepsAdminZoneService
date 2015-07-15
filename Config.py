@@ -23,7 +23,7 @@ class Config:
             self.db_pwd = config.get("postgresql", "pwd")
             self.db_database = config.get("postgresql", "database")
 
-            self.crs_list = eval("["+config.get("crs", "crs_list")+"]")
+            self.crs_list = eval(config.get("crs", "crs_list"))
 
             self.download_folder = config.get("download", "folder")
 

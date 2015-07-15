@@ -28,6 +28,9 @@ function onLoad() {
     $('#class1 input:radio').on("change", onSelectedClass1);
     onSelectedClass1();
 
+    $("#crs").on("change", onChangeCrs);
+    onChangeCrs();
+
     // 파일 다운로드하며 Progress 올리기
     // https://jqueryui.com/progressbar/#download
     progressbar = $("#progressbar");
@@ -176,6 +179,12 @@ function onSelectedTiming() {
     }
 }
 
+function onChangeCrs() {
+    var srid = $("#crs").val();
+    var desc = $("#crs [value='"+srid+"']").attr("about");
+    $("#crs_desc").text(desc);
+}
+
 function autoProgress() {
     var val = progressbar.progressbar("value") | 0;
     val = val + Math.floor(Math.random() * 3);
@@ -185,6 +194,7 @@ function autoProgress() {
         progressTimer = setTimeout(autoProgress, 200);
     }
 }
+
 function makeZip() {
     var table_name = $(':radio[name="timing"]:checked').val();
     var crs = $('#crs').val().replace("EPSG:", "");
