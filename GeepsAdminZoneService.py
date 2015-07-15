@@ -185,29 +185,33 @@ def service_page():
                            crs_list=config.crs_list)
 
 @app.route('/makefile')
+@app.route('/adminzone/makefile')
 def makefile():
     table_name = request.args.get('table_name', None)
     crs = request.args.get('crs', None)
 
     if not crs:
-        return "crs 인자가 필요합니다."
+        return Response("crs 인자가 필요합니다.", 400)
     if not table_name:
-        return "table_name 인자가 필요합니다."
+        return Response("table_name 인자가 필요합니다.", 400)
 
     # crs 있는지 확인
-    if not ("EPSG:"+crs) in config.crs_list:
-        return "요청한 CRS가 없습니다."
+    # if not ("EPSG:"+crs) in config.crs_list:
+    res = query_db("select count(*) from spatial_ref_sys where srid = %s", args=(crs,), one=True)
+    if res[0] <= 0:
+        return Response("요청한 CRS가 없습니다.", 500)
 
     # table_name 있는지 확인
     res = query_db("select count(*) from adminzone_meta where table_name = %s", args=(table_name,), one=True)
     if res[0] <= 0:
-        return "요청한 TABLE이 없습니다."
+        return Response("요청한 TABLE이 없습니다.", 500)
 
+    # file name을 <table_name>__<crs>로 정함
     file_base = table_name+"__"+crs
 
     zip_file = os.path.join(config.download_folder, file_base+".zip")
     if os.path.isfile(zip_file):
-        return "기존 파일 있음"
+        return Response("기존 파일 있음", 200)
 
     temp_dir = tempfile.gettempdir()
     shp_file = os.path.join(temp_dir, file_base+".shp")
@@ -241,23 +245,54 @@ WHERE table_schema = 'public'
         logger.debug(command)
         rc = call(command)
         if rc != 0:
-            return "Shape 파일 생성 중 오류"
+            return Response("Shape 파일 생성 중 오류", 500)
 
-        with ZipFile(zip_file, 'w') as myzip:
-            myzip.write(os.path.join(temp_dir, file_base+".shp"), arcname=file_base+".shp")
-            myzip.write(os.path.join(temp_dir, file_base+".shx"), arcname=file_base+".shx")
-            myzip.write(os.path.join(temp_dir, file_base+".dbf"), arcname=file_base+".dbf")
-            myzip.write(os.path.join(temp_dir, file_base+".prj"), arcname=file_base+".prj")
+        with ZipFile(zip_file, 'w') as shape_zip:
+            shape_zip.write(os.path.join(temp_dir, file_base+".shp"), arcname=file_base+".shp")
+            shape_zip.write(os.path.join(temp_dir, file_base+".shx"), arcname=file_base+".shx")
+            shape_zip.write(os.path.join(temp_dir, file_base+".dbf"), arcname=file_base+".dbf")
+            shape_zip.write(os.path.join(temp_dir, file_base+".prj"), arcname=file_base+".prj")
 
         os.remove(os.path.join(temp_dir, file_base+".shp"))
         os.remove(os.path.join(temp_dir, file_base+".shx"))
         os.remove(os.path.join(temp_dir, file_base+".dbf"))
         os.remove(os.path.join(temp_dir, file_base+".prj"))
     except Exception as e:
-        logger.error("Shape 생성 중 오류: "+str(e))
-        return "Shape 파일 생성 중 오류"
+        logger.error("Shape 파일 생성 중 오류: "+str(e))
+        return Response("Shape 파일 생성 중 오류", 500)
 
-    return "파일 생성 완료"
+    return Response("파일 생성 완료", 200)
+
+
+@app.route('/download')
+@app.route('/adminzone/download')
+def download():
+    table_name = request.args.get('table_name', None)
+    crs = request.args.get('crs', None)
+
+    if not crs:
+        return Response("crs 인자가 필요합니다.", 400)
+    if not table_name:
+        return Response("table_name 인자가 필요합니다.", 400)
+
+    # file name을 <table_name>__<crs>로 정함
+    file_base = table_name+"__"+crs
+
+    zip_file = os.path.join(config.download_folder, file_base+".zip")
+    if not os.path.isfile(zip_file):
+        return Response("ZIP 파일 없음", 500)
+
+    try:
+        with open(zip_file, "rb") as f:
+            zip_bin = f.read()
+    except Exception as e:
+        logger.error("Shape 다운로드 중 오류: "+str(e))
+        return Response("Shape 다운로드 중 오류", 500)
+
+    ret = Response(zip_bin, mimetype='application/zip')
+    ret.headers["Content-Disposition"] = "attachment; filename={}".format(file_base+".zip")
+    return ret
+
 
 if __name__ == '__main__':
     app.run()
