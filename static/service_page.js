@@ -221,6 +221,14 @@ function downloadZip() {
     var current = new Date();
     var makeUrl = "./download?table_name="+table_name+"&crs="+crs+"&dumy="+encodeURIComponent(current.toString());
 
+	// ajax로 저장이 안되 그냥 다운로드로 변경
+	$iframe = $("<iframe>")
+				.hide()
+				.prop("src", makeUrl)
+				.appendTo("body");
+	return;
+
+	// 이하 무시
     downProcess = $.ajax(
         {
             url: makeUrl,
